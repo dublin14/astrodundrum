@@ -1,10 +1,10 @@
 ---
 // src/components/DrupalContent.astro
-// A simple component that fetches content from Drupal's JSON API
+// Updated to ensure correct linking to detail pages
 
 // Get configuration from props
 const { 
-  drupalUrl = 'https://my-drupal-site.ddev.site',
+  drupalUrl = 'https://your-drupal-site.com',
   contentType = 'article',
   limit = 10
 } = Astro.props;
@@ -17,6 +17,7 @@ let articles = [];
 let error = null;
 
 try {
+  console.log(`Fetching Drupal content from: ${apiUrl}`);
   const response = await fetch(apiUrl);
   
   if (!response.ok) {
@@ -25,6 +26,12 @@ try {
   
   const data = await response.json();
   articles = data.data || [];
+  console.log(`Found ${articles.length} articles`);
+  
+  // Log the IDs for debugging
+  if (articles.length > 0) {
+    console.log('Article IDs:', articles.map(a => a.attributes.drupal_internal__nid));
+  }
   
 } catch (err) {
   console.error('Error fetching Drupal content:', err);
@@ -50,6 +57,7 @@ try {
           <span class="date">
             {new Date(article.attributes.created).toLocaleDateString()}
           </span>
+          <span class="id">ID: {article.attributes.drupal_internal__nid}</span>
         </div>
         
         <a href={`/drupal/${article.attributes.drupal_internal__nid}`} class="read-more">
@@ -116,6 +124,8 @@ try {
     margin: 1rem 0;
     font-size: 0.9rem;
     color: #757575;
+    display: flex;
+    justify-content: space-between;
   }
   
   .read-more {
