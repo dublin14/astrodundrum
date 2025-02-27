@@ -1,0 +1,116 @@
+---
+// src/pages/content/[id].astro
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const DRUPAL_URL = 'https://your-drupal-site.com';
+  const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article`);
+  const data = await response.json();
+  
+  return data.data.map(article => ({
+    params: { id: article.attributes.drupal_internal__nid.toString() },
+    props: { article }
+  }));
+}
+
+const { article } = Astro.props;
+const { title, body, created } = article.attributes;
+---
+
+<Layout title={title}>
+  <article class="content-page">
+    <div class="container">
+      <h1>{title}</h1>
+      
+      <div class="meta">
+        <span class="date">Published: {new Date(created).toLocaleDateString()}</span>
+      </div>
+      
+      {article.attributes.field_image && article.attributes.field_image.data && (
+        <img 
+          class="featured-image"
+          src={`https://your-drupal-site.com${article.attributes.field_image.data.attributes.uri.url}`}
+          alt={article.attributes.field_image.data.attributes.alt || title}
+        />
+      )}
+      
+      <div class="content" set:html={body.value} />
+      
+      <div class="navigation">
+        <a href="/drupal-content" class="back-button">← Back to all articles</a>
+      </div>
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .content-page {
+    font-family: system-ui, sans-serif;
+  }
+  
+  .container {
+    max-width: 80ch;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .meta {
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+  
+  .featured-image {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .content {
+    line-height: 1.8;
+    font-size: 1.1rem;
+  }
+  
+  .content p {
+    margin-bottom: 1.5rem;
+  }
+  
+  .content h2 {
+    font-size: 1.8rem;
+    margin: 2rem 0 1rem;
+  }
+  
+  .content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+  }
+  
+  .navigation {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+  }
+  
+  .back-button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #006699;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .back-button:hover {
+    background-color: #004466;
+  }
+</style>
