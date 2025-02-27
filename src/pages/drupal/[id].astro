@@ -2,61 +2,52 @@
 // src/pages/drupal/[id].astro
 
 export async function getStaticPaths() {
-  const DRUPAL_URL = 'https://my-drupal-site.ddev.site';
+  const DRUPAL_URL = 'https://your-drupal-site.com';
   
   try {
+    // Fetch article data from Drupal
     const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article`);
     
     if (!response.ok) {
-      // If we can't get data, return an empty array
-      // This prevents build errors but won't generate any pages
+      console.error(`Failed to fetch articles: ${response.status} ${response.statusText}`);
       return [];
     }
     
     const data = await response.json();
     const articles = data.data || [];
     
-    return articles.map(article => ({
-      params: { id: article.attributes.drupal_internal__nid.toString() },
-      props: { articleId: article.attributes.drupal_internal__nid }
-    }));
+    // Log for debugging
+    console.log(`Found ${articles.length} articles for static paths`);
+    
+    // Map each article to a path
+    return articles.map(article => {
+      // Get the ID (ensure it's a string)
+      const id = article.attributes.drupal_internal__nid.toString();
+      
+      // Log for debugging
+      console.log(`Creating path for article ID: ${id}`);
+      
+      return {
+        params: { id },
+        props: { 
+          article: article,
+          drupalUrl: DRUPAL_URL
+        }
+      };
+    });
   } catch (error) {
     console.error('Error fetching articles for static paths:', error);
     return [];
   }
 }
 
-// Get the article ID from the parameters
-const { articleId } = Astro.props;
-const DRUPAL_URL = 'https://my-drupal-site.ddev.site';
+// Get the article directly from props
+const { article, drupalUrl } = Astro.props;
+const { id } = Astro.params;
 
-// Fetch the full article data
-let article = null;
-let error = null;
-
-try {
-  const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article/${articleId}`);
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch article: ${response.status}`);
-  }
-  
-  const data = await response.json();
-  article = data.data;
-} catch (err) {
-  console.error('Error fetching article:', err);
-  error = err.message;
-}
-
-// You can use your own layout component here
-// import Layout from '../../layouts/YourLayout.astro';
+// For debugging
+console.log(`Rendering article page for ID: ${id}`);
 ---
-
-<!-- If you have a layout, use it like this:
-<Layout title={article ? article.attributes.title : 'Article Not Found'}>
-  ... content below ...
-</Layout>
--->
 
 <html lang="en">
   <head>
@@ -73,17 +64,11 @@ try {
     
     <main>
       <div class="container">
-        {error && (
-          <div class="error-message">
-            <p>Error: {error}</p>
-            <a href="/drupal">Return to articles list</a>
-          </div>
-        )}
-        
-        {!error && !article && (
+        {!article && (
           <div class="not-found">
             <h1>Article Not Found</h1>
-            <p>Sorry, we couldn't find the article you're looking for.</p>
+            <p>Sorry, we couldn't find the article you're looking for (ID: {id}).</p>
+            <p>Debug info: Check console logs for more information.</p>
             <a href="/drupal">Return to articles list</a>
           </div>
         )}
@@ -101,6 +86,15 @@ try {
             {article.attributes.body?.value && (
               <div class="content" set:html={article.attributes.body.value} />
             )}
+            
+            <div class="debug-info">
+              <details>
+                <summary>Debug Information</summary>
+                <pre>Article ID: {id}</pre>
+                <pre>Title: {article.attributes.title}</pre>
+                <pre>Created: {article.attributes.created}</pre>
+              </details>
+            </div>
           </article>
         )}
       </div>
@@ -143,17 +137,11 @@ try {
     padding: 0.5rem 0;
   }
   
-  .error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 2rem;
-    border-radius: 4px;
-    text-align: center;
-  }
-  
   .not-found {
     text-align: center;
     padding: 3rem 0;
+    background-color: #ffebee;
+    border-radius: 8px;
   }
   
   .article-detail h1 {
@@ -172,6 +160,24 @@ try {
   
   .content p {
     margin-bottom: 1.5rem;
+  }
+  
+  .debug-info {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+  }
+  
+  .debug-info details {
+    padding: 0.5rem;
+  }
+  
+  .debug-info pre {
+    background-color: #eee;
+    padding: 0.5rem;
+    border-radius: 4px;
+    overflow: auto;
   }
   
   footer {
