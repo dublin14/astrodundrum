@@ -1,18 +1,76 @@
 ---
-// In your existing page file
-import DrupalData from '../components/DrupalData.astro';
-import BlogPost from '../layouts/BlogPost.astro';
-// Your other imports and page logic...
+// src/pages/content/index.astro
+import Layout from '../layouts/Layout.astro';
+
+// Fetch all content items at build time
+const DRUPAL_URL = 'https://your-drupal-site.com';
+const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article`);
+const data = await response.json();
+const articles = data.data || [];
 ---
 
+<Layout title="Content Listing">
+  <div class="container">
+    <h1>Content Listing</h1>
+    
+    {articles.length === 0 ? (
+      <p>No content found.</p>
+    ) : (
+      <div class="article-list">
+        {articles.map(article => (
+          <article class="article-card">
+            <h2>{article.attributes.title}</h2>
+            <p class="date">
+              {new Date(article.attributes.created).toLocaleDateString()}
+            </p>
+            <a href={`/content/${article.attributes.drupal_internal__nid}`} class="read-more">
+              Read More
+            </a>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</Layout>
 
-  <!-- Your existing content -->
+<style>
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
   
-  <section class="drupal-content-section">
-    <h2>Latest Articles</h2>
-    <DrupalData 
-      baseUrl="https://my-drupal-site.ddev.site"
-      endpoint="/jsonapi/node/article"
-      limit={7}
-    />
-  </section>
+  .article-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .article-card {
+    border: 1px solid #eee;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .article-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .date {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .read-more {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #006699;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.25rem;
+  }
+</style>
