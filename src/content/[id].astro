@@ -3,7 +3,7 @@
 import Layout from '../../layouts/Layout.astro';
 
 export async function getStaticPaths() {
-  const DRUPAL_URL = 'https://your-drupal-site.com';
+  const DRUPAL_URL = 'https://my-drupal-site.ddev.site';
   const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article`);
   const data = await response.json();
   
