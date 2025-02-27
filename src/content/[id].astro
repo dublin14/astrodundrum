@@ -29,7 +29,7 @@ const { title, body, created } = article.attributes;
       {article.attributes.field_image && article.attributes.field_image.data && (
         <img 
           class="featured-image"
-          src={`https://your-drupal-site.com${article.attributes.field_image.data.attributes.uri.url}`}
+          src={`https://my-drupal-site.ddev.site${article.attributes.field_image.data.attributes.uri.url}`}
           alt={article.attributes.field_image.data.attributes.alt || title}
         />
       )}

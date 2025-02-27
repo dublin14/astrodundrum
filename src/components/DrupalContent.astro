@@ -1,0 +1,135 @@
+---
+// src/components/DrupalContent.astro
+// A simple component that fetches content from Drupal's JSON API
+
+// Get configuration from props
+const { 
+  drupalUrl = 'https://my-drupal-site.ddev.site',
+  contentType = 'article',
+  limit = 10
+} = Astro.props;
+
+// Build the API URL
+const apiUrl = `${drupalUrl}/jsonapi/node/${contentType}?page[limit]=${limit}`;
+
+// Fetch the data
+let articles = [];
+let error = null;
+
+try {
+  const response = await fetch(apiUrl);
+  
+  if (!response.ok) {
+    throw new Error(`API responded with status: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  articles = data.data || [];
+  
+} catch (err) {
+  console.error('Error fetching Drupal content:', err);
+  error = err.message;
+}
+---
+
+<div class="drupal-content">
+  {error && <div class="error-message">Error: {error}</div>}
+  
+  {articles.length === 0 && !error && <div class="no-content">No content found</div>}
+  
+  <div class="article-grid">
+    {articles.map(article => (
+      <div class="article-card">
+        <h2>{article.attributes.title}</h2>
+        
+        {article.attributes.body?.summary && (
+          <p class="summary">{article.attributes.body.summary}</p>
+        )}
+        
+        <div class="meta">
+          <span class="date">
+            {new Date(article.attributes.created).toLocaleDateString()}
+          </span>
+        </div>
+        
+        <a href={`/drupal/${article.attributes.drupal_internal__nid}`} class="read-more">
+          Read More
+        </a>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .drupal-content {
+    font-family: system-ui, sans-serif;
+    width: 100%;
+  }
+  
+  .error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  
+  .no-content {
+    background-color: #f5f5f5;
+    padding: 2rem;
+    text-align: center;
+    border-radius: 4px;
+    color: #757575;
+  }
+  
+  .article-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  
+  .article-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+  .article-card h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #1976d2;
+  }
+  
+  .summary {
+    color: #616161;
+    line-height: 1.6;
+  }
+  
+  .meta {
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    color: #757575;
+  }
+  
+  .read-more {
+    display: inline-block;
+    background-color: #1976d2;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .read-more:hover {
+    background-color: #1565c0;
+  }
+</style>

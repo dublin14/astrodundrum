@@ -1,0 +1,82 @@
+---
+// src/pages/drupal.astro
+import DrupalContent from '../components/DrupalContent.astro';
+
+// You can use your own layout component here
+// import Layout from '../layouts/YourLayout.astro';
+---
+
+<!-- If you have a layout, use it like this:
+<Layout title="Drupal Content">
+  ... content below ...
+</Layout>
+-->
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drupal Content</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Drupal Content</h1>
+      </div>
+    </header>
+    
+    <main>
+      <div class="container">
+        <DrupalContent 
+          drupalUrl="https://my-drupal-site.ddev.site" 
+          contentType="article"
+          limit={6}
+        />
+      </div>
+    </main>
+    
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 Your Website</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: #333;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  header {
+    background-color: #1976d2;
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+  }
+  
+  header h1 {
+    margin: 0;
+  }
+  
+  main {
+    padding: 1rem 0 3rem;
+  }
+  
+  footer {
+    background-color: #f5f5f5;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    text-align: center;
+  }
+</style>

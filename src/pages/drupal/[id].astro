@@ -1,0 +1,187 @@
+---
+// src/pages/drupal/[id].astro
+
+export async function getStaticPaths() {
+  const DRUPAL_URL = 'https://my-drupal-site.ddev.site';
+  
+  try {
+    const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article`);
+    
+    if (!response.ok) {
+      // If we can't get data, return an empty array
+      // This prevents build errors but won't generate any pages
+      return [];
+    }
+    
+    const data = await response.json();
+    const articles = data.data || [];
+    
+    return articles.map(article => ({
+      params: { id: article.attributes.drupal_internal__nid.toString() },
+      props: { articleId: article.attributes.drupal_internal__nid }
+    }));
+  } catch (error) {
+    console.error('Error fetching articles for static paths:', error);
+    return [];
+  }
+}
+
+// Get the article ID from the parameters
+const { articleId } = Astro.props;
+const DRUPAL_URL = 'https://my-drupal-site.ddev.site';
+
+// Fetch the full article data
+let article = null;
+let error = null;
+
+try {
+  const response = await fetch(`${DRUPAL_URL}/jsonapi/node/article/${articleId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch article: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  article = data.data;
+} catch (err) {
+  console.error('Error fetching article:', err);
+  error = err.message;
+}
+
+// You can use your own layout component here
+// import Layout from '../../layouts/YourLayout.astro';
+---
+
+<!-- If you have a layout, use it like this:
+<Layout title={article ? article.attributes.title : 'Article Not Found'}>
+  ... content below ...
+</Layout>
+-->
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{article ? article.attributes.title : 'Article Not Found'}</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <a href="/drupal" class="back-link">← Back to Articles</a>
+      </div>
+    </header>
+    
+    <main>
+      <div class="container">
+        {error && (
+          <div class="error-message">
+            <p>Error: {error}</p>
+            <a href="/drupal">Return to articles list</a>
+          </div>
+        )}
+        
+        {!error && !article && (
+          <div class="not-found">
+            <h1>Article Not Found</h1>
+            <p>Sorry, we couldn't find the article you're looking for.</p>
+            <a href="/drupal">Return to articles list</a>
+          </div>
+        )}
+        
+        {article && (
+          <article class="article-detail">
+            <h1>{article.attributes.title}</h1>
+            
+            <div class="meta">
+              <time datetime={article.attributes.created}>
+                {new Date(article.attributes.created).toLocaleDateString()}
+              </time>
+            </div>
+            
+            {article.attributes.body?.value && (
+              <div class="content" set:html={article.attributes.body.value} />
+            )}
+          </article>
+        )}
+      </div>
+    </main>
+    
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 Your Website</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: #333;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  header {
+    background-color: #1976d2;
+    color: white;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+  }
+  
+  .back-link {
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    padding: 0.5rem 0;
+  }
+  
+  .error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 2rem;
+    border-radius: 4px;
+    text-align: center;
+  }
+  
+  .not-found {
+    text-align: center;
+    padding: 3rem 0;
+  }
+  
+  .article-detail h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .meta {
+    color: #757575;
+    margin-bottom: 2rem;
+  }
+  
+  .content {
+    line-height: 1.8;
+  }
+  
+  .content p {
+    margin-bottom: 1.5rem;
+  }
+  
+  footer {
+    background-color: #f5f5f5;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    text-align: center;
+  }
+  
+  a {
+    color: #1976d2;
+  }
+</style>
