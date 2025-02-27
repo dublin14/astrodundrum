@@ -1,0 +1,162 @@
+---
+// src/components/DrupalData.astro
+// This component fetches and displays Drupal content
+
+// You can pass in the endpoint and other options as props
+const { 
+  endpoint = '/jsonapi/node/article',
+  limit = 10, 
+  sortField = 'created', 
+  sortDirection = 'DESC',
+  baseUrl = 'https://your-drupal-site.com' 
+} = Astro.props;
+
+// Construct the full URL with query parameters
+const apiUrl = new URL(`${baseUrl}${endpoint}`);
+apiUrl.searchParams.append('page[limit]', limit);
+apiUrl.searchParams.append('sort', sortDirection === 'DESC' ? `-${sortField}` : sortField);
+
+// Fetch data at build time
+let data = [];
+let error = null;
+
+try {
+  const response = await fetch(apiUrl.toString());
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+  }
+  
+  const json = await response.json();
+  data = json.data || [];
+} catch (e) {
+  console.error('Error fetching Drupal data:', e);
+  error = e.message;
+}
+---
+
+<div class="drupal-content">
+  {error && (
+    <div class="error-message">
+      <p>Error: {error}</p>
+    </div>
+  )}
+  
+  {!error && data.length === 0 && (
+    <div class="no-content">
+      <p>No content found.</p>
+    </div>
+  )}
+  
+  {!error && data.length > 0 && (
+    <div class="content-list">
+      {data.map((item) => (
+        <article class="content-item">
+          <h2>{item.attributes.title}</h2>
+          
+          {item.attributes.field_image && item.attributes.field_image.data && (
+            <img 
+              src={`${baseUrl}${item.attributes.field_image.data.attributes.uri.url}`} 
+              alt={item.attributes.field_image.data.attributes.alt || item.attributes.title} 
+            />
+          )}
+          
+          {item.attributes.body && item.attributes.body.value && (
+            <div class="content-summary" set:html={item.attributes.body.summary || item.attributes.body.value.substring(0, 200) + '...'} />
+          )}
+          
+          <div class="content-meta">
+            <span class="date">{new Date(item.attributes.created).toLocaleDateString()}</span>
+            {item.relationships && item.relationships.uid && item.relationships.uid.data && (
+              <span class="author">By: {item.relationships.uid.data.attributes?.name || 'Unknown'}</span>
+            )}
+          </div>
+          
+          <a href={`/content/${item.attributes.drupal_internal__nid}`} class="read-more">
+            Read More
+          </a>
+        </article>
+      ))}
+    </div>
+  )}
+</div>
+
+<style>
+  .drupal-content {
+    font-family: system-ui, sans-serif;
+    max-width: 80ch;
+    margin: 0 auto;
+  }
+  
+  .error-message {
+    padding: 1rem;
+    background-color: #ffd2d2;
+    border-left: 4px solid #ff6b6b;
+    margin-bottom: 1rem;
+  }
+  
+  .no-content {
+    padding: 2rem 0;
+    text-align: center;
+    color: #666;
+  }
+  
+  .content-list {
+    display: grid;
+    gap: 2rem;
+  }
+  
+  .content-item {
+    border: 1px solid #eee;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .content-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .content-item h2 {
+    margin: 0;
+    padding: 1rem;
+    font-size: 1.5rem;
+  }
+  
+  .content-item img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
+  
+  .content-summary {
+    padding: 0 1rem;
+    line-height: 1.6;
+  }
+  
+  .content-meta {
+    padding: 0.5rem 1rem;
+    display: flex;
+    gap: 1rem;
+    color: #666;
+    font-size: 0.875rem;
+  }
+  
+  .read-more {
+    display: inline-block;
+    margin: 0 1rem 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #006699;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .read-more:hover {
+    background-color: #004466;
+  }
+</style>

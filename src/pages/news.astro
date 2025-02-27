@@ -1,0 +1,37 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+
+
+// Fetch articles from Drupal JSON:API
+const response = await fetch("https://my-drupal-site.ddev.site/jsonapi/node/article", {
+  method: "GET",
+  headers: { "Accept": "application/vnd.api+json" },
+});
+
+const { data: articles } = await response.json();
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  
+</head>
+
+
+<h1>Latest News</h1>
+<ul>
+  {articles.map((article: { id: any; attributes: { title: unknown; body: { value: unknown; }; }; }) => (
+    <li key={article.id}>
+      <h2>{article.attributes.title}</h2>
+      <p>{article.attributes.body?.value}</p>
+    </li>
+  ))}
+</ul>
+
+
+
+</html>

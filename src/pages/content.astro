@@ -1,0 +1,18 @@
+---
+// In your existing page file
+import DrupalData from '../components/DrupalData.astro';
+import BlogPost from '../layouts/BlogPost.astro';
+// Your other imports and page logic...
+---
+
+
+  <!-- Your existing content -->
+  
+  <section class="drupal-content-section">
+    <h2>Latest Articles</h2>
+    <DrupalData 
+      baseUrl="https://my-drupal-site.ddev.site"
+      endpoint="/jsonapi/node/article"
+      limit={7}
+    />
+  </section>
